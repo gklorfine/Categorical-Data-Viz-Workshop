@@ -22,7 +22,7 @@ lgp <- logist_plot(
       fill = "Sex"
    ) +  
    theme(
-      text = element_text(family = "serif", size = 11),
+      text = element_text(size = 11),
       axis.text = element_text(size = rel(1)),
       legend.position = "none"
    )
@@ -35,10 +35,7 @@ hec_mos <- HairEyeColor |>
    geom_mosaic() +
    scale_fill_residual(limits = c(-4, 4)) +
    theme_mosaic(rot_labels = 45) +
-   theme(
-      text = element_text(family = "serif"),
-      legend.position = "none"
-   )
+   theme(legend.position = "none")
 
 # FF display of Berkley data (unstratified)
 ff <- UCBAdmissions |>
@@ -47,7 +44,7 @@ ff <- UCBAdmissions |>
    geom_fourfold() +
    # geom_fourfold draws labels at 5/6 of base_size on small panels,
    # so 11 * 6/5 gives 11 pt text to match the other panels
-   theme_fourfold(base_size = 11 * 6/5, base_family = "serif")
+   theme_fourfold(base_size = 11 * 6/5)
 
 # Combine via patchwork
 title_pic <- lgp + hec_mos + ff

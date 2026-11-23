@@ -1,0 +1,29 @@
+---
+title: "Visualizing Categorical Data in R"
+author: "Gavin Klorfine"  # PDF metadata + footer; the title page block is set in header-includes
+date: "2099-12-31" # TODO: replace with workshop date
+date-format: long
+format:
+   beamer:
+      toc: true
+      toc-title: "Agenda"
+      theme: Madrid
+      slide-level: 2
+header-includes:
+   - \definecolor{maincolor}{HTML}{1B2C2E}
+   - \usecolortheme[named=maincolor]{structure}
+   # Name, email and institution in one block so they share the same line spacing;
+   # the short form [Gavin Klorfine] is what appears in the footer.
+   - \AtBeginDocument{\author[Gavin Klorfine]{Gavin Klorfine \\ gklorfin@yorku.ca \\ York University}}
+   # No separate institute, so drop its (empty, padded) box to keep the gap above the date tight
+   - \setbeamertemplate{institute}{}
+   - \setbeamertemplate{frametitle continuation}{}
+   - \titlegraphic{\includegraphics[height=3.8cm]{images/title-pic.png}}
+   - \setbeamertemplate{title page}{\vbox{}\vfill\begingroup\centering{\usebeamertemplate{titlegraphic}\par}\vskip0.6em\usebeamertemplate{title}\vskip1em\par\usebeamertemplate{author}\usebeamertemplate{institute}\usebeamertemplate{date}\endgroup\vfill}
+---
+
+# Section title
+
+## Test slide
+
+Test text

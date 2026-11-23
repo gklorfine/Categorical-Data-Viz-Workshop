@@ -22,7 +22,8 @@ lgp <- logist_plot(
       fill = "Sex"
    ) +  
    theme(
-      text = element_text(family = "serif", size = 13),
+      text = element_text(family = "serif", size = 11),
+      axis.text = element_text(size = rel(1)),
       legend.position = "none"
    )
 
@@ -44,7 +45,9 @@ ff <- UCBAdmissions |>
    as.data.frame() |>
    ggplot(aes(x = Gender, y = Admit, weight = Freq)) +
    geom_fourfold() +
-   theme_fourfold(base_family = "serif")
+   # geom_fourfold draws labels at 5/6 of base_size on small panels,
+   # so 11 * 6/5 gives 11 pt text to match the other panels
+   theme_fourfold(base_size = 11 * 6/5, base_family = "serif")
 
 # Combine via patchwork
 title_pic <- lgp + hec_mos + ff
@@ -54,5 +57,5 @@ ggsave("images/title-pic.png", title_pic, dpi = 300, width = 8, height = 4, unit
 
 image_read("images/title-pic.png") |>
    image_trim() |>
-   image_border("white", "20x20") |>   # optional: add back a small even margin
+   image_border("white", "20x20") |>
    image_write("images/title-pic.png")

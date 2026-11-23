@@ -1,0 +1,3 @@
+## License
+
+Unless otherwise noted, slides, documentation, and other educational materials are licensed under [CC BY 4.0](LICENSE-CC-BY-4.0). R code is licensed under [GPL ≥ 2.0](LICENSE-GPL-2.0), and third-party materials retain their respective licenses.

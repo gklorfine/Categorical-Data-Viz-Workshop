@@ -44,7 +44,7 @@ ff <- UCBAdmissions |>
    as.data.frame() |>
    ggplot(aes(x = Gender, y = Admit, weight = Freq)) +
    geom_fourfold() +
-   theme_fourfold()
+   theme_fourfold(base_family = "serif")
 
 # Combine via patchwork
 title_pic <- lgp + hec_mos + ff

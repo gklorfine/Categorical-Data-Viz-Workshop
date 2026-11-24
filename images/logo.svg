@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="644" viewBox="0 0 560 644" role="img" aria-labelledby="title desc">
+  <title id="title">Visualizing Categorical Data in R</title>
+  <desc id="desc">A seated blue cat in profile. Its patterned coat crops a mosaic of hair and eye color, pooled over sex. Red tiles have negative Pearson residuals and blue tiles positive residuals under independence. Inside the tail, four quarter-disks share one origin. The illustrative two-by-two table has counts of 4 and 9 in the top row and 9 and 4 in the bottom row. Quarter-disk areas are proportional to those counts. A white diagonal joins the two blue sectors with more cases than expected.</desc>
+  <defs>
+    <path id="cat" d="M148 421C161 413 161 395 162 374C164 323 184 293 226 269C262 249 278 227 286 198L288 126Q288 120 293 124L323 151L355 130Q360 127 359 134L355 162Q371 174 378 193L402 204Q406 206 402 212L388 227Q380 236 359 236L344 238Q337 263 347 292Q357 322 351 357L347 398Q346 406 359 408Q374 409 376 421Z"/>
+    <clipPath id="coat"><use href="#cat"/></clipPath>
+    <clipPath id="patch"><path d="M148 219C229 252 275 257 343 228C348 265 324 284 324 315C324 345 337 368 316 389C297 407 263 404 226 404H148Z"/></clipPath>
+  </defs>
+  <path d="M280 7 553 164V480L280 637 7 480V164Z" fill="#fff" stroke="#102957" stroke-width="11" stroke-linejoin="round"/>
+  <g transform="translate(18 -28)">
+  <path d="M228 408C163 423 111 394 122 347C129 318 113 304 96 284C72 256 75 215 100 190C123 167 158 164 183 182" fill="none" stroke="#102957" stroke-width="23" stroke-linecap="round"/>
+  <!-- Equal margins: areas 4:9 give radii 2:3. All four paths start at the same origin. -->
+  <g transform="translate(153 242)">
+    <path d="M0 0H-33A33 33 0 0 1 0 -33Z" fill="#ff0000"/>
+    <path d="M0 0V-49.5A49.5 49.5 0 0 1 49.5 0Z" fill="#000069"/>
+    <path d="M0 0H33A33 33 0 0 1 0 33Z" fill="#ff0000"/>
+    <path d="M0 0V49.5A49.5 49.5 0 0 1 -49.5 0Z" fill="#000069"/>
+    <path d="M-35.1 35.1L35.1 -35.1" stroke="#000" stroke-width="5.1" stroke-linecap="square"/>
+    <path d="M-35.1 35.1L35.1 -35.1" stroke="white" stroke-width="2.7"/>
+    <path d="M-56 0H56M0 -56V56" stroke="white" stroke-width="4.6"/>
+    <path d="M-56 0H56M0 -56V56" stroke="#111321" stroke-width="1.7"/>
+  </g>
+  <use href="#cat" fill="#102957"/>
+  <g clip-path="url(#coat)">
+    <g clip-path="url(#patch)">
+      <g transform="translate(150 225) scale(1.055 1.07) translate(-175 -234)">
+      <rect x="175" y="234" width="190" height="170" fill="white"/>
+      <rect x="175.000" y="300.174" width="33.102" height="103.826" fill="#1746AB"/>
+      <rect x="175.000" y="267.937" width="33.102" height="30.537" fill="#D1606A"/>
+      <rect x="175.000" y="243.334" width="33.102" height="22.903" fill="#FBE6E6"/>
+      <rect x="175.000" y="234.000" width="33.102" height="7.634" fill="#E79B9D"/>
+      <rect x="210.952" y="335.388" width="87.660" height="68.612" fill="#C2C1E6"/>
+      <rect x="210.952" y="285.256" width="87.660" height="48.432" fill="#E79B9D"/>
+      <rect x="210.952" y="252.421" width="87.660" height="31.135" fill="#BCBCE3"/>
+      <rect x="210.952" y="234.000" width="87.660" height="16.721" fill="#FCEDED"/>
+      <rect x="301.462" y="343.614" width="21.762" height="60.386" fill="#FEFBFB"/>
+      <rect x="301.462" y="302.431" width="21.762" height="39.483" fill="#EBA6A8"/>
+      <rect x="301.462" y="268.215" width="21.762" height="32.515" fill="#D5D4EE"/>
+      <rect x="301.462" y="234.000" width="21.762" height="32.515" fill="#8D90D0"/>
+      <rect x="326.074" y="394.911" width="38.926" height="9.089" fill="#BA2442"/>
+      <rect x="326.074" y="271.159" width="38.926" height="122.052" fill="#1746AB"/>
+      <rect x="326.074" y="256.475" width="38.926" height="12.984" fill="#E28D90"/>
+      <rect x="326.074" y="234.000" width="38.926" height="20.775" fill="#E1E0F3"/>
+      </g>
+    </g>
+  </g>
+  <path d="M296 140 311 155 296 161Z" fill="#84aaf0"/>
+  <path d="M356 184Q363 180 370 184Q364 191 356 184Z" fill="#fff"/>
+  </g>
+  <g text-anchor="middle" fill="#102957" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+    <text x="280" y="453" font-size="61" letter-spacing="-1.8" font-weight="bold">Visualizing</text>
+    <text x="280" y="501" font-size="43" font-weight="500" letter-spacing="-1">Categorical Data</text>
+    <text x="280" y="542" font-size="31" font-weight="500">in R</text>
+  </g>
+</svg>

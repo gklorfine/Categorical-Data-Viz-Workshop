@@ -9,3 +9,8 @@
 
 # HTMLs
 README.html
+
+# Quarto stuff
+/.quarto/
+**/*.quarto_ipynb
+*_files/

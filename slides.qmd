@@ -3,12 +3,16 @@ title: "Visualizing Categorical Data in R"
 author: "Gavin Klorfine"  # PDF metadata + footer; the title page block is set in header-includes
 date: "2099-12-31" # TODO: replace with workshop date
 date-format: long
+execute:
+    echo: TRUE
+    include: TRUE
 format:
    beamer:
       toc: true
       toc-title: "Agenda"
       theme: Madrid
       slide-level: 2
+      highlight-style: arrow
 header-includes:
    - \definecolor{maincolor}{HTML}{1B2C2E}
    - \usecolortheme[named=maincolor]{structure}
@@ -20,10 +24,499 @@ header-includes:
    - \setbeamertemplate{frametitle continuation}{}
    - \titlegraphic{\includegraphics[height=3.8cm]{images/title-pic.png}}
    - \setbeamertemplate{title page}{\vbox{}\vfill\begingroup\centering{\usebeamertemplate{titlegraphic}\par}\vskip0.6em\usebeamertemplate{title}\vskip1em\par\usebeamertemplate{author}\usebeamertemplate{institute}\usebeamertemplate{date}\endgroup\vfill}
+   # One column per package: hex logo, name, citation. Use inside \begin{columns}...\end{columns}.
+   # Args: {logo file} {package name} {authors} {year}
+   # (Single-quoted so YAML doesn't read " #3" as a comment.)
+   - '\newcommand{\hexpkg}[4]{\begin{column}{0.24\textwidth}\centering\includegraphics[height=2.4cm]{#1}\par\vskip0.5em\texttt{#2}\par\vskip0.1em{\scriptsize #3\\(#4)\par}\end{column}}'
+   # Centre a block (e.g. R output) on the slide at its natural width:
+   # wrap it in raw-LaTeX \begin{centerout} ... \end{centerout}
+   - \usepackage{varwidth}
+   - \newenvironment{centerout}{\begin{center}\begin{varwidth}{\linewidth}}{\end{varwidth}\end{center}}
+   - \definecolor{tidygreen}{HTML}{275317}
+   - \definecolor{untidyred}{HTML}{C00000}
+   - '\RecustomVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},fontsize=\small}'
+   - '\makeatletter\renewcommand{\verbatim@font}{\ttfamily\small}\makeatother'
 ---
 
-# Section title
+```{r}
+#| label: setup
+#| echo: FALSE
 
-## Test slide
+library(gt)
+library(ggplot2)
+```
 
-Test text
+## R Packages Needed
+
+```{=latex}
+\begin{columns}[T]
+\hexpkg{images/hex/ggplot2.png}{ggplot2}{Wickham}{2016}
+\hexpkg{images/hex/vcdExtra.png}{vcdExtra}{Friendly \& Klorfine}{2026}
+\hexpkg{images/hex/ggmosaic2.png}{ggmosaic2}{Friendly et al.}{2026}
+\hexpkg{images/hex/ggfourfold.png}{ggfourfold}{Klorfine \& Friendly}{2026}
+\end{columns}
+\vskip1.5em
+```
+
+```{r}
+#| label: install
+#| eval: FALSE
+install.packages(c("ggplot2", "vcdExtra",
+                   "ggmosaic2", "ggfourfold"))
+```
+
+# Forms of Categorical Data in R
+
+## The `HairEyeColor` Data
+
+The `HairEyeColor` data is a classic data set in categorical data analysis (CDA) and will be used as one of the running examples in this workshop. *It is installed in R by default and can be accessed by running* `HairEyeColor`.
+
+```{r}
+#| label: HEC-table
+#| echo: false
+
+library(gt)
+
+hec <- as.data.frame(HairEyeColor) |>
+  tidyr::pivot_wider(names_from = c(Sex, Eye), values_from = Freq)
+
+tbl <- gt(hec, rowname_col = "Hair") |>
+  tab_spanner_delim(delim = "_") |>
+  tab_stubhead(label = "Hair") |>
+  # Shade counts on one shared scale (0 to the largest cell) so cells compare across columns
+  data_color(columns = -Hair, palette = c("white", "#7FA7AB"),
+             domain = c(0, max(HairEyeColor))) |>
+  tab_style(style = cell_text(weight = "bold"),
+            locations = list(cells_column_spanners(), cells_stubhead())) |>
+  tab_options(table.font.size = px(15))
+
+# gt always emits a stretched tabular* in LaTeX, which knocks the cell shading out of
+# line with the columns. Swap it for a plain tabular (natural width), and drop the
+# vertical rule after the Hair column while we're at it.
+tex <- as_latex(tbl)
+tex[] <- sub("\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}}l|",
+             "\\begin{tabular}{l", tex, fixed = TRUE)
+tex[] <- sub("\\end{tabular*}", "\\end{tabular}", tex, fixed = TRUE)
+tex
+```
+
+## Table Form
+
+Categorical Data in R can take a few different forms. The `HairEyeColor` data comes in **table form**:
+
+```{r}
+#| label: HEC-dat
+#| eval: false
+
+HairEyeColor
+```
+
+<!-- The full printout is too tall for one slide, so show it as two side-by-side
+     slices; drop = FALSE keeps R's ", , Sex = ..." header so it reads as the real output -->
+```{=latex}
+\small
+```
+
+:::: {.columns}
+::: {.column width="50%"}
+```{r}
+#| label: HEC-dat-male
+#| echo: false
+HairEyeColor[, , "Male", drop = FALSE]
+```
+:::
+::: {.column width="50%"}
+```{r}
+#| label: HEC-dat-female
+#| echo: false
+HairEyeColor[, , "Female", drop = FALSE]
+```
+:::
+::::
+   
+## Frequency Form
+
+When working with `ggplot2` and related packages, data needs to be either in **frequency** or **case form**.
+
+To convert from table -> frequency form:
+
+```{r}
+#| label: table-to-freq
+#| eval: false
+
+as.data.frame(HairEyeColor) |>  # Convert to frequency form
+   head()                       # Check first few rows
+```
+
+```{=latex}
+\begin{centerout}
+```
+
+```{r}
+#| label: table-to-freq-out
+#| echo: false
+as.data.frame(HairEyeColor) |>
+   head()
+```
+
+```{=latex}
+\end{centerout}
+```
+
+\vspace{1em}
+
+Note the presence of a frequency column, `Freq`.
+
+## Case Form
+
+As mentioned, there is also **case form**, where each observation is given its own row.
+
+To convert from table -> case form:
+
+```{r}
+#| label: table-to-case
+#| eval: false
+
+vcdExtra::expand.dft(HairEyeColor) |>  # Convert
+   dplyr::slice_sample(n = 5)  # Display 5 rows at random
+```
+
+```{=latex}
+\begin{centerout}
+```
+
+```{r}
+#| label: table-to-case-out
+#| echo: false
+vcdExtra::expand.dft(HairEyeColor) |>  # Convert
+   dplyr::slice_sample(n = 5)     # Display 5 rows at random
+```
+
+```{=latex}
+\end{centerout}
+```
+
+\vspace{1em}
+
+Like frequency form, case form data are still `data.frame`s; however, the `Freq` column is omitted since each row would have `Freq = 1`.
+
+## Conversions
+
+The process of converting amongst forms depends both on (a) the current form, and (b) the target form. The diagram on the next slide shows which function to use and when.
+
+In the diagram, `X` represents an R data object, with `A`, `B`, and `C` representing categorical variables.
+
+## Conversions
+
+![](images/convnetwork.png){width=90% fig-align="center"}
+
+## Conversions
+
+In the diagram, \textcolor{untidyred}{red functions} are all in base R, with the exception of `vcdExtra::expand.dft()`
+
+The \textcolor{tidygreen}{green functions} are ones I have developed in `vcdExtra` to try and make the conversion process less of a headache.
+
+Either \textcolor{untidyred}{red} or \textcolor{tidygreen}{green} functions will work, and the choice of which to use is up to you (though if you run into any errors with the \textcolor{tidygreen}{green} ones, let me know!).
+
+:::{.callout-note}
+When converting *from* frequency form *to* a different form, it is usually necessary to specify which column holds the cell frequencies (usually `Freq` or `count`). See the diagram.
+:::
+
+# `ggplot2`: A Basic Overview
+
+## Constructing a Plot
+
+The `ggplot2` R package contains a system for visualizing data that is known as the "Grammar of Graphics" (the 'gg' in `ggplot2`).
+
+- Plots are constructed using aesthetics (`ggplot2::aes()`) and layers
+- This is best shown through a worked example
+   + Let's construct a bar graph of the `HairEyeColor` data
+
+## Bar Graph
+
+First, let's convert our data into frequency form so that we may use `ggplot2`:
+
+```{r}
+#| label: HEC-freq
+
+hec <- as.data.frame(HairEyeColor)
+```
+
+Next, let's construct the graph step-by-step:
+
+## Bar Graph
+
+- All `ggplot2` graphs first start with a call to `ggplot()`
+- The first argument is the dataset
+- The second argument is a list of aesthetic mappings
+   + E.g., what should the $x$-axis be? The $y$-axis? Is there any grouping needed?
+   + Done through the `ggplot2::aes()` function
+
+```{r}
+#| label: bar1
+#| eval: FALSE
+
+library(ggplot2)
+
+ggplot(hec, aes(...))
+```
+
+## Mapping a Variable to $x$ in `aes()`
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+```{r}
+#| label: map-x
+#| eval: false
+
+ggplot(hec, aes(x = Hair))
+```
+
+\vspace{0.5em}
+
+- `Hair` is mapped to the $x$-axis
+- No `geom` yet, so we get a blank canvas
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: map-x-plot
+#| echo: false
+#| fig-width: 3.2
+#| fig-height: 3
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair))
+```
+:::
+::::
+
+## Using a `geom`
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+```{r}
+#| label: use-geom
+#| eval: false
+
+ggplot(hec, aes(x = Hair)) +
+   geom_bar()
+```
+
+\vspace{0.5em}
+
+- A `geom` is how you draw on the canvas. There are different `geom`s for different plot types
+- For bar graphs, there is `geom_bar()`
+- `geom`s are added (via the `+` operator) to the initial `ggplot()` call
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: use-geom-plot
+#| echo: false
+#| fig-width: 3.2
+#| fig-height: 3
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair)) +
+   geom_bar()
+```
+:::
+::::
+
+## Mapping a Variable to `weight` in `aes()`
+
+```{r}
+#| label: map-weight
+#| eval: false
+
+ggplot(hec, aes(x = Hair, weight = Freq)) +
+   geom_bar()
+```
+
+:::: {.columns align=center}
+::: {.column width="58%"}
+- Because our data is in frequency form, we need to let `ggplot2` know where to find the cell frequencies
+   + Otherwise, they are ignored, giving the incorrect plot on the previous slide
+   + To do this, we map the frequency column (`Freq`) to the `weight` aesthetic
+   + This is not required if data is in case form
+
+:::
+::: {.column width="42%"}
+```{r}
+#| label: map-weight-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair, weight = Freq)) +
+   geom_bar()
+```
+:::
+::::
+
+## Mapping a Variable to `fill` in `aes()`
+
+```{r}
+#| label: map-fill
+#| eval: false
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar()
+```
+
+:::: {.columns align=center}
+::: {.column width="50%"}
+
+- We can also include another variable in the graph via grouping
+- This creates a stacked bar graph
+- Mapping a variable to `fill` automatically handles the grouping
+   + There is a separate `group` aesthetic for when you want to group without colour
+
+:::
+::: {.column width="50%"}
+```{r}
+#| label: map-fill-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar()
+```
+:::
+::::
+
+## Scales
+
+```{r}
+#| label: scales
+#| eval: false
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(
+      palette = c("brown", "blue", "#8E7618", "green")
+   )
+```
+
+:::: {.columns align=center}
+::: {.column width="50%"}
+
+- To control which colours are used (e.g., when `fill` is mapped) we can use `ggplot2` scales
+- Since `fill` is mapped and we are working with discrete (categorical) variables, we will use `scale_fill_discrete()`
+
+:::
+::: {.column width="50%"}
+```{r}
+#| label: scales-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(
+      palette = c("brown", "blue", "#8E7618", "green")
+   )
+```
+:::
+::::
+
+## `geom` Arguments
+
+```{r}
+#| label: geom-args
+#| eval: false
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar(position = "dodge") +   # LOOK here!
+   scale_fill_discrete(
+      palette = c("brown", "blue", "#8E7618", "green")
+   )
+```
+
+:::: {.columns align=center}
+::: {.column width="50%"}
+
+- Different `geom`s have differing sets of arguments that modify what is drawn
+- For example, `position = "dodge"` in `geom_bar()` to create a grouped bar chart instead of a stacked one
+
+:::
+::: {.column width="50%"}
+```{r}
+#| label: geom-args-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar(position = "dodge") +   # LOOK here!
+   scale_fill_discrete(
+      palette = c("brown", "blue", "#8E7618", "green")
+   )
+```
+:::
+::::
+
+## Themes
+
+```{r}
+#| label: theme
+#| eval: false
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(
+      palette = c("brown", "blue", "#8E7618", "green")
+   ) +
+   theme_classic()
+```
+
+:::: {.columns align=center}
+::: {.column width="50%"}
+
+- Different themes can change the appearance of the plot
+- Some are made for you, e.g., `theme_classic()`
+- A custom theme can be made via `theme()`
+   + Outside the scope of this workshop
+
+:::
+::: {.column width="50%"}
+```{r}
+#| label: theme-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(
+      palette = c("brown", "blue", "#8E7618", "green")
+   ) +
+   theme_classic()
+```
+:::
+::::
+
+## Labelling with `labs()`
+
+## Acknowledgements
+
+:::: {.columns align=center}
+::: {.column width="60%"}
+This workshop rests upon the work of Michael Friendly, a world expert in data visualization and someone I am very grateful to call my mentor.
+
+\vspace{1em}
+
+His resources on data visualization and CDA are invaluable. They are the first I would recommend for further learning. See the `README` in the GitHub repository for links.
+:::
+::: {.column width="40%"}
+![](images/ddar-cover.png)
+:::
+::::

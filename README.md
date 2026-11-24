@@ -1,6 +1,4 @@
-<img src="images/logo.png" align="right" width="200px" />
-
-# Visualizing Categorical Data in R <br><sub>A QMWS Workshop</sub>
+# Visualizing Categorical Data in R <img src="images/logo.png" align="right" width="200px" /><br><sub>A QMWS Workshop</sub>
 
 ***Work in progress. Venue (QMWS) is not yet confirmed.***
 

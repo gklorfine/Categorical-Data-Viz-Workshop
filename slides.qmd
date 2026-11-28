@@ -28,14 +28,21 @@ header-includes:
    # Args: {logo file} {package name} {authors} {year}
    # (Single-quoted so YAML doesn't read " #3" as a comment.)
    - '\newcommand{\hexpkg}[4]{\begin{column}{0.24\textwidth}\centering\includegraphics[height=2.4cm]{#1}\par\vskip0.5em\texttt{#2}\par\vskip0.1em{\scriptsize #3\\(#4)\par}\end{column}}'
+   # One row per package: hex logo on the left, full reference (hanging indent) on the right.
+   # Args: {logo file} {reference text}
+   - '\newcommand{\hexcite}[2]{\begin{columns}[c]\begin{column}{0.14\textwidth}\centering\includegraphics[height=1.5cm]{#1}\end{column}\begin{column}{0.82\textwidth}\footnotesize\hangindent=1.5em\hangafter=1 #2\par\end{column}\end{columns}}'
    # Centre a block (e.g. R output) on the slide at its natural width:
    # wrap it in raw-LaTeX \begin{centerout} ... \end{centerout}
    - \usepackage{varwidth}
+   - \usepackage{tikz}
    - \newenvironment{centerout}{\begin{center}\begin{varwidth}{\linewidth}}{\end{varwidth}\end{center}}
    - \definecolor{tidygreen}{HTML}{275317}
    - \definecolor{untidyred}{HTML}{C00000}
    - '\RecustomVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},fontsize=\small}'
    - '\makeatletter\renewcommand{\verbatim@font}{\ttfamily\small}\makeatother'
+   # Smaller code chunks for one slide: put a raw-LaTeX \smallcode at the top of the frame
+   # (the redefinition stays local to that frame)
+   - '\newcommand{\smallcode}{\RecustomVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},fontsize=\footnotesize}}'
 ---
 
 ```{r}
@@ -44,6 +51,7 @@ header-includes:
 
 library(gt)
 library(ggplot2)
+library(ggmosaic2)
 ```
 
 ## R Packages Needed
@@ -405,8 +413,10 @@ ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
 :::: {.columns align=center}
 ::: {.column width="50%"}
 
-- To control which colours are used (e.g., when `fill` is mapped) we can use `ggplot2` scales
-- Since `fill` is mapped and we are working with discrete (categorical) variables, we will use `scale_fill_discrete()`
+- To control how data are translated by the aesthetics, we can use `ggplot2` **scales**
+   + E.g., which `fill` colour to assign to each eye colour, modifying `x` or `y` axes, etc.
+- Scale functions are each named `scale_<aesthetic>_<type>()`
+   + Examples of `<type>` are `discrete` and `continuous`
 
 :::
 ::: {.column width="50%"}
@@ -426,6 +436,49 @@ ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
 :::
 ::::
 
+## Scales
+
+```{r}
+#| label: scales2
+#| eval: false
+
+our_colours <- c("brown", "blue", "#8E7618", "green")
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(
+      palette = our_colours
+   )
+```
+
+:::: {.columns align=center}
+::: {.column width="50%"}
+
+`scale_<aesthetic>_<type>()`
+
+\vspace{0.5em}
+
+- Here `fill` is mapped to a discrete (categorical) variable, so we will use `scale_fill_discrete()`
+- To keep things concise, I also saved our palette to a variable named `our_colours`
+
+:::
+::: {.column width="50%"}
+```{r}
+#| label: scales2-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 80%
+
+our_colours <- c("brown", "blue", "#8E7618", "green")
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(palette = our_colours)
+```
+:::
+::::
+
 ## `geom` Arguments
 
 ```{r}
@@ -434,9 +487,7 @@ ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
 
 ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
    geom_bar(position = "dodge") +   # LOOK here!
-   scale_fill_discrete(
-      palette = c("brown", "blue", "#8E7618", "green")
-   )
+   scale_fill_discrete(palette = our_colours)
 ```
 
 :::: {.columns align=center}
@@ -455,10 +506,8 @@ ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
 #| out-width: 100%
 
 ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
-   geom_bar(position = "dodge") +   # LOOK here!
-   scale_fill_discrete(
-      palette = c("brown", "blue", "#8E7618", "green")
-   )
+   geom_bar(position = "dodge") +   #<<< LOOK here!
+   scale_fill_discrete(palette = our_colours)
 ```
 :::
 ::::
@@ -471,9 +520,7 @@ ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
 
 ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
    geom_bar() +
-   scale_fill_discrete(
-      palette = c("brown", "blue", "#8E7618", "green")
-   ) +
+   scale_fill_discrete(palette = our_colours) +
    theme_classic()
 ```
 
@@ -496,15 +543,509 @@ ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
 
 ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
    geom_bar() +
-   scale_fill_discrete(
-      palette = c("brown", "blue", "#8E7618", "green")
-   ) +
+   scale_fill_discrete(palette = our_colours) +
    theme_classic()
 ```
 :::
 ::::
 
 ## Labelling with `labs()`
+
+```{r}
+#| label: labs
+#| eval: false
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(palette = our_colours) +
+   theme_classic() +
+   labs(title = "HairEyeColor Data Summed Over Sex")
+```
+
+:::: {.columns align=center}
+::: {.column width="50%"}
+
+- The `labs()` function is used to add/modify labels
+   + E.g., a title, subtitle, and axes labels
+
+:::
+::: {.column width="50%"}
+```{r}
+#| label: labs-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(palette = our_colours) +
+   theme_classic() +
+   labs(title = "HairEyeColor Data\nSummed Over Sex")
+```
+:::
+::::
+
+# Spine Plots
+
+## Motivation
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+
+- Bar graphs use rectangles of differing height
+- The heights depend on a single variable
+- Grouping was one way of adding another variable into the mix
+- This is not the most ideal, as comparisons are harder than needed
+   + E.g., among those with blue eyes, are there more people with brown hair than blonde?
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: spine-motive
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = Hair, weight = Freq, fill = Eye)) +
+   geom_bar() +
+   scale_fill_discrete(palette = our_colours) +
+   theme_classic() +
+   labs(title = "HairEyeColor Data\nSummed Over Sex")
+```
+:::
+::::
+
+## Introducing... Spine Plots!
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+
+- A special case of the mosaic plot (stay tuned!)
+- Used when you have two categorical variables
+   + Looking ahead: mosaics are for more than two
+- Utilizes width as well as height
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: spine-show
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = product(Eye,Hair), weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   geom_mosaic_text(display_values = "observed", format_digits = 0) +
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(base_size = 9) +
+   theme(legend.position = "none")
+```
+:::
+::::
+
+## Introducing... Spine Plots!
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+
+- Think of this like a stacked bar chart, but with **area proportional to cell size**, as opposed to just looking at differences in height
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: spine-show2
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 100%
+
+ggplot(hec, aes(x = product(Eye,Hair), weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   geom_mosaic_text(display_values = "observed", format_digits = 0) +
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(base_size = 9) +
+   theme(legend.position = "none")
+```
+:::
+::::
+
+## Constructing a Spine Plot with `ggmosaic2`
+
+```{r}
+#| label: spine-hair
+#| eval: false
+
+library(ggmosaic2)
+
+ggplot(hec, aes(x = Hair, weight = Freq)) +
+   geom_mosaic()
+```
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+
+- For pedagogy, let's start with just `Hair` mapped to `x`
+- Since spine plots are a special case of mosaics, we can use `ggmosaic2::geom_mosaic()` as our `geom`
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: spine-hair-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 95%
+
+ggplot(hec, aes(x = Hair, weight = Freq)) +
+   geom_mosaic()
+```
+:::
+::::
+
+## Constructing a Spine Plot with `ggmosaic2`
+
+```{r}
+#| label: spine-product
+#| eval: false
+                   #VVV LOOK HERE VVV#
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic()
+```
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+
+- To add another variable (e.g., `Eye`), we need to map multiple variables to the `x` aesthetic.
+- We can do this via the `ggmosaic2::product()` function
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: spine-product-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 95%
+                   #VVV LOOK HERE VVV#
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic()
+```
+:::
+::::
+
+## Constructing a Spine Plot with `ggmosaic2`
+
+```{r}
+#| label: spine-product2
+#| eval: false
+                   #VVV LOOK HERE VVV#
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic()
+```
+
+:::: {.columns align=center}
+::: {.column width="45%"}
+
+- Note that the first split is the last variable entered into `product()`
+   + Splits are made going from the last variable to the first
+
+:::
+::: {.column width="55%"}
+```{r}
+#| label: spine-product-plot2
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 95%
+                   #VVV LOOK HERE VVV#
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic()
+```
+:::
+::::
+
+## Taking our Spine Plot to Sephora
+
+```{r}
+#| label: spine-theme
+#| eval: false
+                   
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic() +
+   theme_mosaic()
+```
+
+:::: {.columns align=center}
+::: {.column width="47%"}
+
+- Now that we know how to make a spine plot, let's make it pretty
+- Whenever you use `geom_mosaic`, it is recommended to also use `ggmosaic2::theme_mosaic()`
+   + Ensures an aspect ratio of one, removes unnecessary pieces (e.g., ticks, background), etc.
+
+
+:::
+::: {.column width="53%"}
+```{r}
+#| label: spine-theme-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 95%
+                   
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic() +
+   theme_mosaic()
+```
+:::
+::::
+
+## Taking our Spine Plot to Sephora
+
+```{r}
+#| label: spine-theme2
+#| eval: false
+                   
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic() +
+   theme_mosaic(rot_labels = 30, base_size = 9)
+```
+
+:::: {.columns align=center}
+::: {.column width="47%"}
+
+- In `theme_mosaic()`, we can use the `rot_labels` argument to rotate the category labels to a given angle (in degrees)
+- We can also use the `base_size` argument to adjust the base font size
+   + There is also `base_family` for font family (e.g., serif, sans-serif)
+
+
+:::
+::: {.column width="53%"}
+```{r}
+#| label: spine-theme-plot2
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 95%
+                   
+ggplot(hec, aes(x = product(Eye, Hair), weight = Freq)) +
+   geom_mosaic() +
+   theme_mosaic(rot_labels = 30, base_size = 9)
+```
+:::
+::::
+
+## Taking our Spine Plot to Sephora
+
+```{r}
+#| label: spine-fill
+#| eval: false
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9)
+```
+
+:::: {.columns align=center}
+::: {.column width="47%"}
+
+- To add colour, we can map one of the included variables (`Hair` or `Eye`) to the `fill` aesthetic
+- Let's also use the same `scale_fill_discrete()` call as we saw for bar plots so that shading is meaningful
+
+:::
+::: {.column width="53%"}
+```{r}
+#| label: spine-fill-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 95%
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9)
+```
+:::
+::::
+
+## Taking our Spine Plot to Sephora
+
+```{r}
+#| label: spine-rmleg
+#| eval: false
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9) +
+   theme(legend.position = "none")
+```
+
+:::: {.columns align=center}
+::: {.column width="47%"}
+
+- Since the legend is redundant (it is already explained via the $y$-axis), we can remove it through extra theme-ing options in `ggplot2::theme()`
+   + In this case, we will set the `legend.position` argument to `"none"`
+
+:::
+::: {.column width="53%"}
+```{r}
+#| label: spine-rmleg-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 85%
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9) +
+   theme(legend.position = "none")
+```
+:::
+::::
+
+## `ggmosaic2::geom_mosaic_text()`
+
+```{r}
+#| label: spine-text
+#| eval: false
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   geom_mosaic_text() + #<<< LOOK here!
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9) +
+   theme(legend.position = "none")
+```
+
+:::: {.columns align=center}
+::: {.column width="47%"}
+
+- We can use `geom_mosaic_text()` to add text to our mosaic
+- The default option (i.e., no arguments used) is not recommended
+
+:::
+::: {.column width="53%"}
+```{r}
+#| label: spine-text-plot
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 80%
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   geom_mosaic_text() + #<<< LOOK here!
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9) +
+   theme(legend.position = "none")
+```
+:::
+::::
+
+## `ggmosaic2::geom_mosaic_text()`
+
+```{=latex}
+\smallcode
+```
+
+```{r}
+#| label: spine-text2
+#| eval: false
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() + #VVVVVVVVVVVVVVVVVV LOOK here VVVVVVVVVVVVVVVVVV
+   geom_mosaic_text(display_values = "observed", format_digits = 0) +
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9) +
+   theme(legend.position = "none")
+```
+
+:::: {.columns align=center}
+::: {.column width="47%"}
+
+- To display observed cell counts, set the `display_values` argument to `"observed"`
+- The `format_digits` argument controls how many decimal places are displayed
+   + Because we are working with counts, we can set this to `0`
+
+:::
+::: {.column width="53%"}
+```{r}
+#| label: spine-text-plot2
+#| echo: false
+#| fig-width: 2.8
+#| fig-height: 2.8
+#| out-width: 84%
+                   
+ggplot(hec, aes(x = product(Eye, Hair),
+                weight = Freq, fill = Eye)) +
+   geom_mosaic() +
+   geom_mosaic_text(display_values = "observed",
+                    format_digits = 0) + #<<< LOOK here!
+   scale_fill_discrete(palette = our_colours) +
+   theme_mosaic(rot_labels = 30, base_size = 9) +
+   theme(legend.position = "none")
+```
+:::
+::::
+
+
+<!-- 
+- Maybe go back to an unshaded mosaic for residual based shading??
+- Another option: use tables of observed and expected counts, show the difference, shade them according to residuals, and then replace residuals w/ the observed counts, keeping the shading. Then show the spine plot. Will try to use vcdExtra::color_table() for most of this.
+-->
+
+# Residual Based Shading
+
+# Mosaic Displays
+
+# Fourfold Displays
+
+# Some Plots for Logistic Regression
+
+# Closing Remarks
+
+## Package Documentation
+
+Documentation can be found online through each package's corresponding `pkgdown` website:
+
+```{=latex}
+\vskip0.4em
+\hexcite{images/hex/ggplot2.png}{\hangindent=0pt\texttt{ggplot2}\\\url{https://ggplot2.tidyverse.org}}
+\vskip0.3em
+\hexcite{images/hex/vcdExtra.png}{\hangindent=0pt\texttt{vcdExtra}\\\url{https://friendly.github.io/vcdExtra/}}
+\vskip0.3em
+\hexcite{images/hex/ggmosaic2.png}{\hangindent=0pt\texttt{ggmosaic2}\\\url{https://friendly.github.io/ggmosaic2/}}
+\vskip0.3em
+\hexcite{images/hex/ggfourfold.png}{\hangindent=0pt\texttt{ggfourfold}\\\url{https://gavinklorfine.com/ggfourfold/}}
+```
+
+## Citation Information
+
+If you happen to use a figure created using `ggmosaic2`, `ggfourfold`, or `vcdExtra`, please cite me and the other authors!
+
+```{=latex}
+\vskip0.8em
+\hexcite{images/hex/vcdExtra.png}{Friendly, M., \& Klorfine, G. (2026). \textit{vcdExtra: `vcd' extensions and additions} (Version 0.9.9) [R package]. \url{https://CRAN.R-project.org/package=vcdExtra}}
+\vskip0.6em
+\hexcite{images/hex/ggmosaic2.png}{Friendly, M., Klorfine, G., Jeppson, H., Hofmann, H., \& Cook, D. (2026). \textit{ggmosaic2: Mosaic plots in the `ggplot2' framework, extended} (Version 0.5.1) [R package]. \url{https://CRAN.R-project.org/package=ggmosaic2}}
+\vskip0.6em
+\hexcite{images/hex/ggfourfold.png}{Klorfine, G., \& Friendly, M. (2026). \textit{ggfourfold: Fourfold displays for `ggplot2'} (Version 0.2.0) [R package]. \url{https://CRAN.R-project.org/package=ggfourfold}}
+```
+
+It's also good to cite R packages that aren't mine. Citation information can be found via `citation(package = "ggplot2")`, substituting the package name of interest.
 
 ## Acknowledgements
 
@@ -520,3 +1061,42 @@ His resources on data visualization and CDA are invaluable. They are the first I
 ![](images/ddar-cover.png)
 :::
 ::::
+
+## Thank You!
+
+```{=latex}
+% Text at the normal left margin (like the other slides); hex graphic flush right
+% so its right margin matches; \hfill takes up whatever is left in the middle.
+\noindent\begin{varwidth}[c]{0.55\textwidth}
+{\large Thanks for registering and taking\\
+part in my workshop!\par}
+
+\vspace{1.5em}
+
+% Fixed-width minipage so the Contact block hugs its text instead of filling the space
+\noindent\begin{minipage}{40mm}
+\begin{block}{Contact}
+\small
+Gavin Klorfine\\
+Graduate Student,\\
+Department of Psychology,\\
+York University\\
+\href{mailto:gklorfin@yorku.ca}{gklorfin@yorku.ca}\\
+\href{https://gavinklorfine.com}{gavinklorfine.com}
+\end{block}
+\end{minipage}
+\end{varwidth}%
+\hfill%
+% Workshop logo in the centre, package hexes sitting against its four diagonal edges.
+% Offset = (apothem of big hex + apothem of small hex + gap) along the 60-degree edge normal.
+% Sizes: \H = workshop logo height, \h = package hex height (spacing follows automatically).
+\begin{tikzpicture}[baseline=(current bounding box.center)]
+\def\H{46mm}\def\h{24mm}
+\pgfmathsetlengthmacro{\d}{(\H + \h)*sqrt(3)/4 + 1.5mm}
+\node[inner sep=0] at (0,0) {\includegraphics[height=\H]{images/logo.png}};
+\node[inner sep=0] at (120:\d) {\includegraphics[height=\h]{images/hex/ggplot2.png}};
+\node[inner sep=0] at (60:\d) {\includegraphics[height=\h]{images/hex/vcdExtra.png}};
+\node[inner sep=0] at (240:\d) {\includegraphics[height=\h]{images/hex/ggmosaic2.png}};
+\node[inner sep=0] at (300:\d) {\includegraphics[height=\h]{images/hex/ggfourfold.png}};
+\end{tikzpicture}
+```

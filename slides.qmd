@@ -8,8 +8,7 @@ execute:
     include: TRUE
 format:
    beamer:
-      toc: true
-      toc-title: "Agenda"
+      toc: false  # the Agenda slide is written by hand below so it can hold the logo
       theme: Madrid
       slide-level: 2
       highlight-style: arrow
@@ -35,6 +34,9 @@ header-includes:
    # wrap it in raw-LaTeX \begin{centerout} ... \end{centerout}
    - \usepackage{varwidth}
    - \usepackage{tikz}
+   # Table of contents (sections only) with a custom gap between entries; beamer's default is 1.5em.
+   # Usage: \compacttoc{0.7em}
+   - '\makeatletter\newcommand{\compacttoc}[1]{\begingroup\patchcmd{\beamer@sectionintoc}{\vskip1.5em}{\vskip#1}{}{}\tableofcontents[hideallsubsections]\endgroup}\makeatother'
    - \newenvironment{centerout}{\begin{center}\begin{varwidth}{\linewidth}}{\end{varwidth}\end{center}}
    - \definecolor{tidygreen}{HTML}{275317}
    - \definecolor{untidyred}{HTML}{C00000}
@@ -53,6 +55,21 @@ library(gt)
 library(ggplot2)
 library(ggmosaic2)
 ```
+
+## Agenda
+
+:::: {.columns align=center}
+::: {.column width="60%"}
+```{=latex}
+% Same contents as Quarto's automatic `toc: true` slide (sections only),
+% with a smaller gap between entries so all of them fit above the footer
+\compacttoc{1em}
+```
+:::
+::: {.column width="40%"}
+![](images/logo.png)
+:::
+::::
 
 ## R Packages Needed
 

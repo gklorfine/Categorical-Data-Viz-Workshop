@@ -106,7 +106,10 @@ hec <- as.data.frame(HairEyeColor) |>
   tidyr::pivot_wider(names_from = c(Sex, Eye), values_from = Freq)
 
 tbl <- gt(hec, rowname_col = "Hair") |>
-  tab_spanner_delim(delim = "_") |>
+  # Spanners name the column variable (Eye) as well as the Sex split
+  tab_spanner("Eye (Male)", columns = starts_with("Male")) |>
+  tab_spanner("Eye (Female)", columns = starts_with("Female")) |>
+  cols_label_with(fn = \(x) sub(".*_", "", x)) |>  # "Male_Brown" -> "Brown"
   tab_stubhead(label = "Hair") |>
   # Shade counts on one shared scale (0 to the largest cell) so cells compare across columns
   data_color(columns = -Hair, palette = c("white", "#7FA7AB"),
@@ -1098,8 +1101,11 @@ Gavin Klorfine\\
 Graduate Student,\\
 Department of Psychology,\\
 York University\\
-\href{mailto:gklorfin@yorku.ca}{gklorfin@yorku.ca}\\
-\href{https://gavinklorfine.com}{gavinklorfine.com}
+% Link colours from ggfourfold's default ("vcd") palette:
+% navy = significant positive association, red = significant negative
+% (red darkened from the palette's #FF0000 so it is less loud)
+\href{mailto:gklorfin@yorku.ca}{\textcolor[HTML]{000080}{gklorfin@yorku.ca}}\\
+\href{https://gavinklorfine.com}{\textcolor[HTML]{B30000}{gavinklorfine.com}}
 \end{block}
 \end{minipage}
 \end{varwidth}%
